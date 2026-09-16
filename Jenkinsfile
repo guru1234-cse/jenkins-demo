@@ -5,46 +5,26 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo 'Building Docker image...'
-                sh 'docker build -t docker-jenkins-demo:v2 .'
+                echo 'Building Docker Compose application...'
+                sh 'docker compose build'
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Testing Docker container...'
-
-                sh '''
-                    docker rm -f ci-test-container 2>/dev/null || true
-
-                    docker run -d \
-                        --name ci-test-container \
-                        -p 3001:3000 \
-                        docker-jenkins-demo:v2
-
-                    sleep 5
-
-                    curl -f http://localhost:3001
-
-                    docker rm -f ci-test-container
-                '''
+                echo 'Validating Docker Compose configuration...'
+                sh 'docker compose config'
             }
         }
 
         stage('Deploy') {
             steps {
-                echo 'Deploying application...'
-
-                sh '''
-                    docker rm -f docker-jenkins-demo-container 2>/dev/null || true
-
-                    docker run -d \
-                        --name docker-jenkins-demo-container \
-                        -p 3000:3000 \
-                        docker-jenkins-demo:v2
-
-                    docker ps
-                '''
+                echo 'Deploying application using Docker Compose...'
+                sh 'docker compose up -d'
+                sh 'sleep 10'
+                sh 'docker compose ps'
+                sh 'curl -f http://localhost:8081'
+                sh 'curl -f http://localhost:3001'
             }
         }
     }
